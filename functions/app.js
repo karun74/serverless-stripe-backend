@@ -2,7 +2,8 @@ var express = require('express');
 var cors = require('cors');
 var bodyParser = require('body-parser');
 
-var stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+var stripe = require('stripe')('sk_test_1Fhxj4iMa6xcCx7R2Rf7H1ZJ');
+// var stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 var app = express();
 //var port = process.env.PORT || 4000;
@@ -19,17 +20,30 @@ console.log("Inside the app.js...");
 app.post('/charges', async (request, response) => {
   try {
     // Create the PaymentIntent
-	  console.log("Inside the post method");
+    // const body = JSON.parse(request.body);
+	  console.log("Inside the post method", request.body);
+    const paymentMethod = await stripe.paymentMethods.create({
+      type: 'card',
+      card: {
+        number: request.body.cardNumber,
+        exp_month: request.body.cardExpMonth,
+        exp_year: request.body.cardExpYear,
+        cvc: request.body.cvv,
+      },
+    });
+    console.log("paymentMethod: ", paymentMethod);
+
     let intent = await stripe.paymentIntents.create({
-      payment_method: request.body.payment_method_id,
+      payment_method: paymentMethod.id,
+      payment_method_types: ['card'],
       description: "Test payment",
       amount: request.body.amount * 100,
-      currency: 'USD',
+      currency: 'usd',
       confirmation_method: 'manual',
       confirm: true
     });
     // Send the response to the client
-	  console.log("Completed the stripe method invocation");
+	  console.log("Completed the stripe method invocation: ", intent);
     return response.send(generateResponse(intent));
   } catch (e) {
     // Display error on client
