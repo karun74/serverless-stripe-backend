@@ -19,18 +19,45 @@ console.log("Inside the app.js...");
 app.post("/charges", async (request, response) => {
   try {
     // Create the PaymentIntent
-    console.log("Inside the post method");
-    let intent = await stripe.paymentIntents.create({
-      payment_method: request.body.payment_method_id,
-      description: "Test payment",
-      amount: request.body.amount * 100,
-      currency: "USD",
-      confirmation_method: "manual",
-      confirm: true,
-    });
-    // Send the response to the client
-    console.log("Completed the stripe method invocation");
-    return response.send(generateResponse(intent));
+    if (request.body.payment_method_id == null) {
+      console.log("Inside the post method", request.body);
+      const paymentMethod = await stripe.paymentMethods.create({
+        type: "card",
+        card: {
+          number: request.body.cardNumber,
+          exp_month: request.body.cardExpMonth,
+          exp_year: request.body.cardExpYear,
+          cvc: request.body.cvv,
+        },
+      });
+      console.log("paymentMethod: ", paymentMethod);
+
+      let intent = await stripe.paymentIntents.create({
+        payment_method: paymentMethod.id,
+        payment_method_types: ["card"],
+        description: "Test payment",
+        amount: request.body.amount * 100,
+        currency: "usd",
+        confirmation_method: "manual",
+        confirm: true,
+      });
+      // Send the response to the client
+      console.log("Completed the stripe method invocation: ", intent);
+      return response.send(generateResponse(intent));
+    } else {
+      console.log("Inside the post method");
+      let intent = await stripe.paymentIntents.create({
+        payment_method: request.body.payment_method_id,
+        description: "Test payment",
+        amount: request.body.amount * 100,
+        currency: "USD",
+        confirmation_method: "manual",
+        confirm: true,
+      });
+      // Send the response to the client
+      console.log("Completed the stripe method invocation");
+      return response.send(generateResponse(intent));
+    }
   } catch (e) {
     // Display error on client
     return response.send({ error: e.message });
@@ -41,30 +68,6 @@ app.post("/cardCharges", async (request, response) => {
   try {
     // Create the PaymentIntent
     // const body = JSON.parse(request.body);
-    console.log("Inside the post method", request.body);
-    const paymentMethod = await stripe.paymentMethods.create({
-      type: "card",
-      card: {
-        number: request.body.cardNumber,
-        exp_month: request.body.cardExpMonth,
-        exp_year: request.body.cardExpYear,
-        cvc: request.body.cvv,
-      },
-    });
-    console.log("paymentMethod: ", paymentMethod);
-
-    let intent = await stripe.paymentIntents.create({
-      payment_method: paymentMethod.id,
-      payment_method_types: ["card"],
-      description: "Test payment",
-      amount: request.body.amount * 100,
-      currency: "usd",
-      confirmation_method: "manual",
-      confirm: true,
-    });
-    // Send the response to the client
-    console.log("Completed the stripe method invocation: ", intent);
-    return response.send(generateResponse(intent));
   } catch (e) {
     // Display error on client
     return response.send({ error: e.message });
