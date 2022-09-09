@@ -31,3 +31,7 @@ functions:
           path: charges
           method: post
           cors: true
+      - http:
+          path: cardCharges
+          method: post
+          cors: true

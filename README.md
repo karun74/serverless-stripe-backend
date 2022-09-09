@@ -43,6 +43,7 @@ yarn eslint
 
 ```
 serverless deploy
+serverless deploy --aws-profile karun
 ```
 
 ## Configuration
